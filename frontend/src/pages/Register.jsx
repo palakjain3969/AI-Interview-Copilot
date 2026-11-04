@@ -1,0 +1,11 @@
+import React,{useState} from "react";
+import {Link,useNavigate} from "react-router-dom";
+import {BrainCircuit,ArrowRight} from "lucide-react";
+import {useAuth} from "../auth";
+import {getErrorMessage} from "../api";
+import Notice from "../components/Notice";
+export default function Register(){
+ const{register,login}=useAuth(),navigate=useNavigate();const[name,setName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ async function submit(e){e.preventDefault();setBusy(true);setError("");try{await register(name,email,password);if(localStorage.getItem("aic_token"))navigate("/");else{await login(email,password);navigate("/");}}catch(err){setError(getErrorMessage(err));}finally{setBusy(false);}}
+ return <div className="auth-page"><div className="auth-glow"/><div className="auth-card"><div className="auth-brand"><span className="brand-icon"><BrainCircuit size={23}/></span><span>Interview<span className="brand-accent">Copilot</span></span></div><div className="eyebrow">GET STARTED</div><h1>Build confidence.<br/><span className="gradient-text">One answer at a time.</span></h1><p className="muted">Create your account and start practicing with personalized AI feedback.</p><Notice>{error}</Notice><form onSubmit={submit} className="form-stack"><label>Full name<input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" required/></label><label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" required/></label><label>Password<input type="password" minLength="6" value={password} onChange={e=>setPassword(e.target.value)} placeholder="At least 6 characters" required/></label><button className="btn primary full" disabled={busy}>{busy?"Creating account...":"Create account"}<ArrowRight size={17}/></button></form><div className="auth-foot">Already have an account? <Link to="/login">Sign in</Link></div></div></div>;
+}
