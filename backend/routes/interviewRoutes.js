@@ -1,8 +1,8 @@
-
 const express = require("express");
 
 const {
     createInterview,
+    suggestTopics,
     getUserInterviews,
     getInterviewResult
 } = require("../controllers/interviewController");
@@ -10,14 +10,12 @@ const {
 const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
+router.post("/suggest-topics", protect, suggestTopics);
 
-// Create a new interview
 router.post("/", protect, createInterview);
 
-// Get all interviews of logged-in user
 router.get("/", protect, getUserInterviews);
 
-// Get result of a specific interview
 router.get("/:id/result", protect, getInterviewResult);
 
 module.exports = router;

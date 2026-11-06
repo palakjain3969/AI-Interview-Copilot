@@ -1,29 +1,42 @@
 const mongoose = require('mongoose');
+
 const interviewSchema = new mongoose.Schema(
     {
-        user:{
+        user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true
         },
-        role:{
+
+        role: {
             type: String,
             required: true
         },
-        experience:{
+
+        experience: {
             type: String,
             required: true
         },
-        difficulty:{
+
+        difficulty: {
             type: String,
             enum: ['Easy', 'Medium', 'Hard'],
             required: true
         },
-        topics:{
+
+        topics: {
             type: [String],
             default: []
         },
-        status:{
+
+        numberOfQuestions: {
+            type: Number,
+            default: 5,
+            min: 1,
+            max: 20
+        },
+
+        status: {
             type: String,
             enum: ['created', 'in-progress', 'completed'],
             default: 'created'
@@ -33,4 +46,5 @@ const interviewSchema = new mongoose.Schema(
         timestamps: true
     }
 );
-module.exports= mongoose.model('Interview', interviewSchema);
+
+module.exports = mongoose.model('Interview', interviewSchema);

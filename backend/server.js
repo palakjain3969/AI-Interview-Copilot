@@ -55,10 +55,6 @@ app.post("/api/test-evaluate", async (req, res) => {
 });
 
 
-
-
-
-
 app.use(cors());
 app.use(express.json());
 app.use("/api/interviews", interviewRoutes);

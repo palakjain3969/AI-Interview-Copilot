@@ -2,64 +2,129 @@
 const Interview = require("../models/Interview");
 const Question = require("../models/Question");
 const Answer = require("../models/Answer");
-const { generateQuestions } = require("../services/aiServices");
+const {
+    generateQuestions,
+    generateTopicSuggestions
+} = require("../services/aiServices");
 
+// CREATE INTERVIEW
 // CREATE INTERVIEW
 const createInterview = async (req, res) => {
     console.log("CREATE INTERVIEW CONTROLLER CALLED");
 
     try {
-        const { role, experience, difficulty, topics } = req.body;
+        const {
+            role,
+            experience,
+            difficulty,
+            topics,
+            numberOfQuestions
+        } = req.body;
 
         if (!role || !experience || !difficulty) {
             return res.status(400).json({
-                message: "Role, experience and difficulty are required",
+                message: "Role, experience and difficulty are required"
             });
         }
 
+        const questionCount = Number(numberOfQuestions ?? 5);
+
+        if (
+            !Number.isInteger(questionCount) ||
+            questionCount < 1 ||
+            questionCount > 20
+        ) {
+            return res.status(400).json({
+                message: "Number of questions must be between 1 and 20"
+            });
+        }
+
+        if (topics !== undefined && !Array.isArray(topics)) {
+            return res.status(400).json({
+                message: "Topics must be an array"
+            });
+        }
+
+        const selectedTopics = topics || [];
+
+        // Generate questions according to the selected count
+        const generatedQuestions = await generateQuestions({
+            role,
+            experience,
+            difficulty,
+            topics: selectedTopics,
+            numberOfQuestions: questionCount
+        });
+
+        console.log("Generated questions:", generatedQuestions);
+
+        // Create interview after successful question generation
         const interview = await Interview.create({
             user: req.user,
             role,
             experience,
             difficulty,
-            topics: topics || [],
+            topics: selectedTopics,
+            numberOfQuestions: questionCount
         });
-
-        const generatedQuestions = await generateQuestions({
-            role,
-            experience,
-            difficulty,
-            topics: topics || [],
-        });
-
-        console.log("Generated questions:", generatedQuestions);
 
         const questionsToSave = generatedQuestions.map((q, index) => ({
             interview: interview._id,
             question: q.question,
             topic: q.topic,
             difficulty: q.difficulty,
-            order: index + 1,
+            order: index + 1
         }));
 
         const savedQuestions = await Question.insertMany(questionsToSave);
 
-        res.status(201).json({
+        return res.status(201).json({
             message: "Interview created successfully",
             interview,
-            questions: savedQuestions,
+            questions: savedQuestions
         });
 
     } catch (error) {
         console.error("Error creating interview:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: "Failed to create interview",
-            error: error.message,
+            error: error.message
         });
     }
 };
 
+// SUGGEST INTERVIEW TOPICS
+const suggestTopics = async (req, res) => {
+    try {
+        const { role, experience, difficulty } = req.body;
+
+        if (!role || !experience || !difficulty) {
+            return res.status(400).json({
+                message: "Role, experience and difficulty are required"
+            });
+        }
+
+        const topics = await generateTopicSuggestions({
+            role,
+            experience,
+            difficulty
+        });
+
+        return res.status(200).json({
+            message: "Topics suggested successfully",
+            topics
+        });
+
+    } catch (error) {
+        console.error("Error suggesting topics:", error);
+
+        return res.status(500).json({
+            message: "Failed to suggest topics",
+            error: error.message
+        });
+    }
+};
 
 // GET ALL INTERVIEWS OF LOGGED-IN USER
 const getUserInterviews = async (req, res) => {
@@ -220,9 +285,9 @@ const getInterviewResult = async (req, res) => {
     }
 };
 
-
 module.exports = {
     createInterview,
+    suggestTopics,
     getUserInterviews,
     getInterviewResult
 };
